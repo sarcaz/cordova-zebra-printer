@@ -1,8 +1,15 @@
 package com.apache.cordova.plugins.zebra;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
+//import android.bluetooth.BluetoothAdapter;
+//import android.bluetooth.BluetoothDevice;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
+//import androidx.core.content.ContextCompat;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
@@ -12,17 +19,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Set;
+//import java.util.Set;
 
-import com.zebra.sdk.comm.BluetoothConnection;
-import com.zebra.sdk.comm.Connection;
+//import com.zebra.sdk.comm.BluetoothConnection;
+//import com.zebra.sdk.comm.Connection;
 import com.zebra.sdk.comm.ConnectionException;
 import com.zebra.sdk.printer.PrinterStatus;
 import com.zebra.sdk.printer.ZebraPrinterFactory;
-import com.zebra.sdk.printer.ZebraPrinterLanguageUnknownException;
-
+//import com.zebra.sdk.printer.ZebraPrinterLanguageUnknownException;
+import com.zebra.sdk.btleComm.BluetoothLeConnection;
+//import com.zebra.sdk.btleComm.BluetoothLeStatusConnection;
 public class ZebraPrinter extends CordovaPlugin {
-    private Connection printerConnection;
+    private BluetoothLeConnection printerConnection;
     private com.zebra.sdk.printer.ZebraPrinter printer;
     private static final String lock = "ZebraPluginLock";
 
@@ -34,6 +42,7 @@ public class ZebraPrinter extends CordovaPlugin {
                 this.discover(callbackContext);
                 return true;
             case "connect":
+                this.checkPermissions();
                 this.connect(args, callbackContext);
                 return true;
             case "print":
@@ -173,8 +182,8 @@ public class ZebraPrinter extends CordovaPlugin {
             byte[] configLabel = cpcl.getBytes();
             printerConnection.write(configLabel);
 
-            if (printerConnection instanceof BluetoothConnection) {
-                String friendlyName = ((BluetoothConnection) printerConnection).getFriendlyName();
+            if (printerConnection instanceof BluetoothLeConnection) {
+                String friendlyName = ((BluetoothLeConnection) printerConnection).getFriendlyName();
                 System.out.println(friendlyName);
             }
         } catch (ConnectionException e) {
@@ -212,7 +221,8 @@ public class ZebraPrinter extends CordovaPlugin {
             }
 
             //create a new BT connection
-            printerConnection = new BluetoothConnection(macAddress);
+            Context context=this.cordova.getActivity().getApplicationContext();
+            printerConnection = new BluetoothLeConnection(macAddress,context);
 
             //check that it isn't null
             if(printerConnection == null){
@@ -323,7 +333,7 @@ public class ZebraPrinter extends CordovaPlugin {
     private JSONArray NonZebraDiscovery() {
         JSONArray printers = new JSONArray();
 
-        try {
+        /*try {
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
             Set<BluetoothDevice> devices = adapter.getBondedDevices();
 
@@ -339,8 +349,48 @@ public class ZebraPrinter extends CordovaPlugin {
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
-        }
+        }*/
         return printers;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    private static final String[] PERMISSIONS_BLUETOOTH_33 = {
+            android.Manifest.permission.BLUETOOTH_SCAN,
+            android.Manifest.permission.BLUETOOTH_CONNECT,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
+    };
+
+
+    private static final String[] PERMISSIONS_BLUETOOTH = {
+            android.Manifest.permission.BLUETOOTH_SCAN,
+            android.Manifest.permission.BLUETOOTH_CONNECT,
+            android.Manifest.permission.BLUETOOTH,
+            android.Manifest.permission.BLUETOOTH_ADVERTISE,
+            android.Manifest.permission.BLUETOOTH_ADMIN
+    };
+
+    private String [] getBluetoothPermissions() {
+        if(Build.VERSION_CODES.TIRAMISU <= Build.VERSION.SDK_INT) {
+            return PERMISSIONS_BLUETOOTH_33;
+        }
+        return PERMISSIONS_BLUETOOTH;
+    }
+
+    private void checkPermissions(){
+        Context context=this.cordova.getActivity().getApplicationContext();
+        int permission2 = ActivityCompat.checkSelfPermission(context,
+                android.Manifest.permission.BLUETOOTH_SCAN);
+        int permission3 = ActivityCompat.checkSelfPermission(context,
+                android.Manifest.permission.BLUETOOTH_CONNECT);
+        if (permission2 != PackageManager.PERMISSION_GRANTED && permission3 !=
+                PackageManager.PERMISSION_GRANTED){
+
+            ActivityCompat.requestPermissions(
+                    this.cordova.getActivity(),
+                    getBluetoothPermissions(),
+                    1
+            );
+        }
     }
 
 }
