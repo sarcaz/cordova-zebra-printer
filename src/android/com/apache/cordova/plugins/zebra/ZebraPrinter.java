@@ -1,7 +1,7 @@
 package com.apache.cordova.plugins.zebra;
 
-//import android.bluetooth.BluetoothAdapter;
-//import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -21,16 +21,16 @@ import org.json.JSONObject;
 
 //import java.util.Set;
 
-//import com.zebra.sdk.comm.BluetoothConnection;
-//import com.zebra.sdk.comm.Connection;
+import com.zebra.sdk.comm.BluetoothConnection;
+import com.zebra.sdk.comm.Connection;
 import com.zebra.sdk.comm.ConnectionException;
 import com.zebra.sdk.printer.PrinterStatus;
 import com.zebra.sdk.printer.ZebraPrinterFactory;
-//import com.zebra.sdk.printer.ZebraPrinterLanguageUnknownException;
-import com.zebra.sdk.btleComm.BluetoothLeConnection;
+import com.zebra.sdk.printer.ZebraPrinterLanguageUnknownException;
+//import com.zebra.sdk.btleComm.BluetoothLeConnection;
 //import com.zebra.sdk.btleComm.BluetoothLeStatusConnection;
 public class ZebraPrinter extends CordovaPlugin {
-    private BluetoothLeConnection printerConnection;
+    private Connection printerConnection;
     private com.zebra.sdk.printer.ZebraPrinter printer;
     private static final String lock = "ZebraPluginLock";
 
@@ -182,8 +182,8 @@ public class ZebraPrinter extends CordovaPlugin {
             byte[] configLabel = cpcl.getBytes();
             printerConnection.write(configLabel);
 
-            if (printerConnection instanceof BluetoothLeConnection) {
-                String friendlyName = ((BluetoothLeConnection) printerConnection).getFriendlyName();
+            if (printerConnection instanceof BluetoothConnection) {
+                String friendlyName = ((BluetoothConnection) printerConnection).getFriendlyName();
                 System.out.println(friendlyName);
             }
         } catch (ConnectionException e) {
@@ -222,7 +222,7 @@ public class ZebraPrinter extends CordovaPlugin {
 
             //create a new BT connection
             Context context=this.cordova.getActivity().getApplicationContext();
-            printerConnection = new BluetoothLeConnection(macAddress,context);
+            printerConnection = new BluetoothConnection(macAddress);
 
             //check that it isn't null
             if(printerConnection == null){
