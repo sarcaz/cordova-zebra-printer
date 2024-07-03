@@ -21,16 +21,16 @@ import org.json.JSONObject;
 
 //import java.util.Set;
 
-import com.zebra.sdk.comm.BluetoothConnection;
-import com.zebra.sdk.comm.Connection;
+//import com.zebra.sdk.comm.BluetoothConnection;
+//import com.zebra.sdk.comm.Connection;
 import com.zebra.sdk.comm.ConnectionException;
 import com.zebra.sdk.printer.PrinterStatus;
 import com.zebra.sdk.printer.ZebraPrinterFactory;
 import com.zebra.sdk.printer.ZebraPrinterLanguageUnknownException;
-//import com.zebra.sdk.btleComm.BluetoothLeConnection;
-//import com.zebra.sdk.btleComm.BluetoothLeStatusConnection;
+import com.zebra.sdk.btleComm.BluetoothLeConnection;
+import com.zebra.sdk.btleComm.BluetoothLeStatusConnection;
 public class ZebraPrinter extends CordovaPlugin {
-    private Connection printerConnection;
+    private BluetoothLeConnection printerConnection;
     private com.zebra.sdk.printer.ZebraPrinter printer;
     private static final String lock = "ZebraPluginLock";
 
@@ -182,8 +182,8 @@ public class ZebraPrinter extends CordovaPlugin {
             byte[] configLabel = cpcl.getBytes();
             printerConnection.write(configLabel);
 
-            if (printerConnection instanceof BluetoothConnection) {
-                String friendlyName = ((BluetoothConnection) printerConnection).getFriendlyName();
+            if (printerConnection instanceof BluetoothLeConnection) {
+                String friendlyName = ((BluetoothLeConnection) printerConnection).getFriendlyName();
                 System.out.println(friendlyName);
             }
         } catch (ConnectionException e) {
@@ -222,8 +222,8 @@ public class ZebraPrinter extends CordovaPlugin {
 
             //create a new BT connection
             Context context=this.cordova.getActivity().getApplicationContext();
-            printerConnection = new BluetoothConnection(macAddress);
-
+            //printerConnection = new BluetoothConnection(macAddress);
+            printerConnection = new BluetoothLeConnection(macAddress,context);
             //check that it isn't null
             if(printerConnection == null){
                 return false;
